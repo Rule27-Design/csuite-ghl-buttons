@@ -945,6 +945,13 @@
   function findInjectionPoints() {
     debug("CP:15 Looking for injection points...");
 
+    // Look for the discussion/feed area first (bottom placement)
+    const discussionArea = document.querySelector('.discussion-content, .feed-container, .posts-container, .timeline, .activity-feed');
+    if (discussionArea) {
+      debug("Found discussion/feed area for injection");
+      return discussionArea;
+    }
+
     // Enhanced selectors for GoHighLevel pages - REORDERED FOR BETTER PLACEMENT
     const possibleSelectors = [
       // Try main content areas first
@@ -972,12 +979,12 @@
       ".group-header",
       
       // ID selectors last (these might catch headers)
-      '[id*="channel"]',
-      '[id*="community"]',
-      '[id*="group"]',
-      '[class*="channel"]',
-      '[class*="community"]',
-      '[class*="group"]',
+      '[id*="channel"]:not([id*="header"])',
+      '[id*="community"]:not([id*="header"])',
+      '[id*="group"]:not([id*="header"]):not([id*="info"])',
+      '[class*="channel"]:not([class*="header"])',
+      '[class*="community"]:not([class*="header"])',
+      '[class*="group"]:not([class*="header"]):not([class*="info"])',
       
       // Vue/GHL specific
       "[data-v-*]",
@@ -1102,6 +1109,9 @@
 
     debug("CP:19 Starting button injection process");
 
+    // IMPORTANT: Inject styles immediately when adding buttons
+    injectStyles();
+
     const injectionPoint = findInjectionPoints();
 
     if (!injectionPoint) {
@@ -1125,21 +1135,21 @@
 
     const inlineButtons = createInlineButton();
 
-    // Try different insertion methods
+    // Try different insertion methods - PRIORITIZE APPENDING (bottom placement)
     try {
-      // Method 1: Insert at the beginning
-      injectionPoint.insertBefore(inlineButtons, injectionPoint.firstChild);
-      debug("CP:20 Buttons injected using insertBefore");
+      // Method 1: Append to the element (puts it at bottom)
+      injectionPoint.appendChild(inlineButtons);
+      debug("CP:20 Buttons injected using appendChild");
     } catch (e1) {
       try {
-        // Method 2: Append to the element
-        injectionPoint.appendChild(inlineButtons);
-        debug("CP:20 Buttons injected using appendChild");
+        // Method 2: Insert after the element
+        injectionPoint.parentNode.insertBefore(inlineButtons, injectionPoint.nextSibling);
+        debug("CP:20 Buttons injected using parentNode.insertBefore");
       } catch (e2) {
         try {
-          // Method 3: Insert after the element
-          injectionPoint.parentNode.insertBefore(inlineButtons, injectionPoint.nextSibling);
-          debug("CP:20 Buttons injected using parentNode.insertBefore");
+          // Method 3: Insert at the beginning (last resort)
+          injectionPoint.insertBefore(inlineButtons, injectionPoint.firstChild);
+          debug("CP:20 Buttons injected using insertBefore");
         } catch (e3) {
           debug("Failed to inject buttons:", e3);
           return;
@@ -1213,6 +1223,9 @@
   // Enhanced initialization
   function init() {
     debug("CP:26 Initializing C-Suite Network Button Injector");
+
+    // Inject styles immediately on initialization
+    injectStyles();
 
     // Initial check
     checkAndInject();
