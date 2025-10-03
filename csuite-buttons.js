@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  console.log("C-Suite Network Button Injector - Starting v2.3...");
+  console.log("C-Suite Network Button Injector - Starting v2.4...");
   console.log("CP:1 Script loaded successfully");
 
   // Configuration
@@ -941,18 +941,11 @@
     return isMatch;
   }
 
-  // Find injection points - IMPROVED VERSION
+  // Find injection points
   function findInjectionPoints() {
     debug("CP:15 Looking for injection points...");
 
-    // Look for the discussion/feed area first (bottom placement)
-    const discussionArea = document.querySelector('.discussion-content, .feed-container, .posts-container, .timeline, .activity-feed');
-    if (discussionArea) {
-      debug("Found discussion/feed area for injection");
-      return discussionArea;
-    }
-
-    // Enhanced selectors for GoHighLevel pages - REORDERED FOR BETTER PLACEMENT
+    // Enhanced selectors for GoHighLevel pages
     const possibleSelectors = [
       // Try main content areas first
       "main",
@@ -978,13 +971,13 @@
       ".content-header",
       ".group-header",
       
-      // ID selectors last (these might catch headers)
-      '[id*="channel"]:not([id*="header"])',
-      '[id*="community"]:not([id*="header"])',
-      '[id*="group"]:not([id*="header"]):not([id*="info"])',
-      '[class*="channel"]:not([class*="header"])',
-      '[class*="community"]:not([class*="header"])',
-      '[class*="group"]:not([class*="header"]):not([class*="info"])',
+      // ID selectors last
+      '[id*="channel"]',
+      '[id*="community"]',
+      '[id*="group"]',
+      '[class*="channel"]',
+      '[class*="community"]',
+      '[class*="group"]',
       
       // Vue/GHL specific
       "[data-v-*]",
@@ -1002,15 +995,14 @@
       try {
         const elements = document.querySelectorAll(selector);
         for (const element of elements) {
-          // Check if element is visible, has reasonable dimensions, and is not in header
+          // Check if element is visible and suitable
           if (element && 
               element.offsetWidth > 0 && 
               element.offsetHeight > 0 &&
               !element.querySelector("#custom-contribute-container") &&
               !element.id.includes("header") &&
               !element.className.includes("header") &&
-              !element.id.includes("info") &&  // Avoid group-info
-              !element.classList.contains("group-info")) {  // Also check classList
+              !element.id.includes("info")) {
             debug(`Found injection point with selector: ${selector}`, element);
             return element;
           }
@@ -1027,74 +1019,9 @@
       const text = heading.textContent.toLowerCase();
       if (text.includes("contributor") || 
           text.includes("community") || 
-          text.includes("group") ||
-          text.includes("ask")) {
-        // Get parent but avoid header containers
-        let parent = heading.parentElement;
-        while (parent && (parent.id.includes("header") || parent.className.includes("header"))) {
-          parent = parent.parentElement;
-        }
-        if (parent) {
-          debug("Found injection point via heading:", parent);
-          return parent;
-        }
-      }
-    }
-
-    // Last resort - find main content area
-    const fallback = document.querySelector("main") ||
-      document.querySelector('[role="main"]') ||
-      document.querySelector(".content") ||
-      document.querySelector("#app") ||
-      document.body.querySelector("div > div");
-
-    if (fallback) {
-      debug("Using fallback injection point:", fallback);
-    } else {
-      debug("No injection point found!");
-    }
-
-    return fallback;
-  }
-
-    // Try each selector
-    for (const selector of possibleSelectors) {
-      try {
-        const elements = document.querySelectorAll(selector);
-        for (const element of elements) {
-          // Check if element is visible, has reasonable dimensions, and is not in header
-          if (element && 
-              element.offsetWidth > 0 && 
-              element.offsetHeight > 0 &&
-              !element.querySelector("#custom-contribute-container") &&
-              !element.id.includes("header") &&
-              !element.className.includes("header") &&
-              !element.id.includes("info") &&  // Avoid group-info
-              !element.classList.contains("group-info")) {  // Also check classList
-            debug(`Found injection point with selector: ${selector}`, element);
-            return element;
-          }
-        }
-      } catch (e) {
-        // Selector might be invalid, continue
-        continue;
-      }
-    }
-
-    // Look for heading elements
-    const headings = document.querySelectorAll("h1, h2, h3");
-    for (const heading of headings) {
-      const text = heading.textContent.toLowerCase();
-      if (text.includes("contributor") || 
-          text.includes("community") || 
-          text.includes("group") ||
-          text.includes("ask")) {
-        // Get parent but avoid header containers
-        let parent = heading.parentElement;
-        while (parent && (parent.id.includes("header") || parent.className.includes("header"))) {
-          parent = parent.parentElement;
-        }
-        if (parent) {
+          text.includes("group")) {
+        const parent = heading.parentElement;
+        if (parent && !parent.id.includes("header") && !parent.className.includes("header")) {
           debug("Found injection point via heading:", parent);
           return parent;
         }
@@ -1119,12 +1046,11 @@
 
   debug("CP:16 Page detection functions defined");
 
-  // Create inline buttons - IMPROVED STYLING
+  // Create inline buttons
   function createInlineButton() {
     const container = document.createElement("div");
     container.className = "contribute-btn-container";
     container.id = "custom-contribute-container";
-    // Better positioning and visibility
     container.style.cssText = "margin:30px auto;max-width:600px;padding:25px;background:#f9f9f9;border-radius:10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);border:2px solid #e20608;";
 
     // Add a title
