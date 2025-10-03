@@ -925,14 +925,27 @@
       hash: window.location.hash
     });
 
-    // Multiple checks for the target page
+    // Multiple checks for the target page - now includes subpages
     const checks = [
+      // Main contributor page and all its subpages
       currentURL.includes("communities/groups/contributor"),
       currentPath.includes("/communities/groups/contributor"),
       currentURL.includes("contributor-membersfor-executi"),
       currentPath.includes("contributor-membersfor-executi"),
-      currentPath.includes("/communities") && currentPath.includes("contributor"),
-      currentPath.match(/\/communities\/groups\/[^\/]*contributor/i)
+      
+      // Include Leadership, Events, Members, etc. tabs
+      currentPath.includes("/communities/groups/") && currentPath.includes("contributor"),
+      currentPath.match(/\/communities\/groups\/[^\/]*contributor[^\/]*/i),
+      
+      // Check if we're still in the same group even if URL changes
+      currentPath.includes("/communities/groups/") && 
+        (currentPath.includes("/leadership") || 
+         currentPath.includes("/events") || 
+         currentPath.includes("/members") || 
+         currentPath.includes("/about") || 
+         currentPath.includes("/discussion") || 
+         currentPath.includes("/learning") || 
+         currentPath.includes("/leaderboard"))
     ];
 
     const isMatch = checks.some((check) => check);
