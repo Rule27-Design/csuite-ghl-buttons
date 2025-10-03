@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  console.log("C-Suite Network Button Injector - Starting v2.2...");
+  console.log("C-Suite Network Button Injector - Starting v2.3...");
   console.log("CP:1 Script loaded successfully");
 
   // Configuration
@@ -114,14 +114,15 @@
     const styleSheet = document.createElement("style");
     styleSheet.id = "article-form-styles";
     
-    // Fixed: Using a single template literal with proper spaces in RGBA
     styleSheet.textContent = `
       .contribute-btn-container {
-        margin: 20px 0 !important;
-        padding: 20px !important;
+        margin: 30px auto !important;
+        max-width: 600px !important;
+        padding: 25px !important;
         background: #f9f9f9 !important;
         border-radius: 10px !important;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+        border: 2px solid #e20608 !important;
       }
       
       .custom-contribute-btn {
@@ -940,34 +941,53 @@
     return isMatch;
   }
 
-  // Find injection points
+  // Find injection points - IMPROVED VERSION
   function findInjectionPoints() {
     debug("CP:15 Looking for injection points...");
 
-    // Enhanced selectors for GoHighLevel pages
+    // Enhanced selectors for GoHighLevel pages - REORDERED FOR BETTER PLACEMENT
     const possibleSelectors = [
+      // Try main content areas first
+      "main",
+      '[role="main"]',
+      ".main-content",
+      ".content-wrapper",
+      ".page-content",
+      
+      // Then try community/group content areas
+      ".community-content",
+      ".channel-content", 
+      ".group-content",
+      
+      // Generic containers before headers
+      ".container > div:first-child",
+      "main > div:first-child",
+      "body > div > div > main",
+      
+      // Headers should be lower priority
+      ".channel-header",
+      ".community-header",
+      ".page-header",
+      ".content-header",
+      ".group-header",
+      
+      // ID selectors last (these might catch headers)
       '[id*="channel"]',
       '[id*="community"]',
       '[id*="group"]',
       '[class*="channel"]',
       '[class*="community"]',
       '[class*="group"]',
-      ".channel-header",
-      ".community-header",
-      ".page-header",
-      ".content-header",
-      ".group-header",
-      ".main-content",
-      ".content-wrapper",
-      ".page-content",
-      "#main",
+      
+      // Vue/GHL specific
       "[data-v-*]",
       ".hl_wrapper",
       ".hl-wrapper",
-      "main > div:first-child",
-      ".container > div:first-child",
-      "body > div > div > main",
-      "[role='main']"
+      
+      // Ultimate fallback
+      ".content",
+      "#app",
+      "#main"
     ];
 
     // Try each selector
@@ -975,11 +995,15 @@
       try {
         const elements = document.querySelectorAll(selector);
         for (const element of elements) {
-          // Check if element is visible and has reasonable dimensions
+          // Check if element is visible, has reasonable dimensions, and is not in header
           if (element && 
               element.offsetWidth > 0 && 
               element.offsetHeight > 0 &&
-              !element.querySelector("#custom-contribute-container")) {
+              !element.querySelector("#custom-contribute-container") &&
+              !element.id.includes("header") &&
+              !element.className.includes("header") &&
+              !element.id.includes("info") &&  // Avoid group-info
+              !element.classList.contains("group-info")) {  // Also check classList
             debug(`Found injection point with selector: ${selector}`, element);
             return element;
           }
@@ -998,8 +1022,15 @@
           text.includes("community") || 
           text.includes("group") ||
           text.includes("ask")) {
-        debug("Found injection point via heading:", heading);
-        return heading.parentElement;
+        // Get parent but avoid header containers
+        let parent = heading.parentElement;
+        while (parent && (parent.id.includes("header") || parent.className.includes("header"))) {
+          parent = parent.parentElement;
+        }
+        if (parent) {
+          debug("Found injection point via heading:", parent);
+          return parent;
+        }
       }
     }
 
@@ -1021,16 +1052,17 @@
 
   debug("CP:16 Page detection functions defined");
 
-  // Create inline buttons
+  // Create inline buttons - IMPROVED STYLING
   function createInlineButton() {
     const container = document.createElement("div");
     container.className = "contribute-btn-container";
     container.id = "custom-contribute-container";
-    container.style.cssText = "margin:20px 0;padding:20px;background:#f9f9f9;border-radius:10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px;box-shadow:0 2px 10px rgba(0,0,0,0.1);";
+    // Better positioning and visibility
+    container.style.cssText = "margin:30px auto;max-width:600px;padding:25px;background:#f9f9f9;border-radius:10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);border:2px solid #e20608;";
 
     // Add a title
     const title = document.createElement("h3");
-    title.style.cssText = "margin:0 0 15px 0;color:#333;font-size:18px;";
+    title.style.cssText = "margin:0 0 20px 0;color:#333;font-size:22px;font-weight:600;";
     title.textContent = "C-Suite Network Actions";
     container.appendChild(title);
 
@@ -1061,7 +1093,7 @@
 
   debug("CP:18 About to define addButtons function");
 
-  // RENAMED FROM injectButton to addButtons
+  // Main button injection function
   function addButtons() {
     if (buttonInjected) {
       debug("Buttons already injected");
@@ -1257,7 +1289,7 @@
     config,
     isTargetPage,
     findInjectionPoints,
-    addButtons, // Changed from injectButton to addButtons
+    addButtons,
     checkAndInject,
     buttonInjected: () => buttonInjected,
     retryCount: () => retryCount
